@@ -105,12 +105,12 @@ Visit [coinbase.com](https://www.coinbase.com/)
 
 ## 🌐 Data Source
 
-This project is frontend-only and fetches market data directly from the public **CoinCap API**.
+This project is frontend-only and fetches market data directly from the public **CoinGecko API**.
 
 Optional environment setting:
 
 ```dotenv
-VITE_CRYPTO_API_BASE_URL=https://api.coincap.io/v2
+VITE_COINGECKO_API_BASE_URL=https://api.coingecko.com/api/v3
 ```
 
 Auth flows in the sign in/sign up screens are stored locally in browser `localStorage` for demo purposes.

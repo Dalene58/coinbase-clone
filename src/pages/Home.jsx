@@ -2,11 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
 	getCoinMarketChart,
-	getExchangeRates,
 	getGlobalData,
 	getLivePrices,
 	getMarkets,
-	getSimplePrices,
 } from "../data/coingecko";
 
 const FALLBACK_LIVE_ASSETS = [
@@ -16,11 +14,33 @@ const FALLBACK_LIVE_ASSETS = [
 	{ label: "USDC", symbol: "USDC", apiId: "usd-coin" },
 ];
 
+const FALLBACK_LIVE_PRICES = {
+	tether: { usd: 1.0, usd_24h_change: 0.01 },
+	binancecoin: { usd: 640.41, usd_24h_change: 4.44 },
+	ripple: { usd: 1.36, usd_24h_change: 1.7 },
+	"usd-coin": { usd: 1.0, usd_24h_change: 0.01 },
+};
+
+const FALLBACK_QUICK_PRICES = {
+	bitcoin: { usd: 69036 },
+	ethereum: { usd: 2027.79 },
+	litecoin: { usd: 54.04 },
+};
+
+const FALLBACK_GLOBAL_SNAPSHOT = {
+	active_cryptocurrencies: 18306,
+	markets: 1478,
+	market_cap_percentage: { btc: 56.72 },
+};
+
+const FALLBACK_CHARTS = {
+	bitcoin: [66000, 66500, 66800, 67100, 67600, 68050, 68400, 68900].map((price, index) => [index, price]),
+	ethereum: [1960, 1975, 1988, 2001, 2010, 2015, 2022, 2028].map((price, index) => [index, price]),
+};
+
 const LIVE_CHART_COINS = [
 	{ id: "bitcoin", label: "Bitcoin", symbol: "BTC" },
 	{ id: "ethereum", label: "Ethereum", symbol: "ETH" },
-	{ id: "solana", label: "Solana", symbol: "SOL" },
-	{ id: "ripple", label: "XRP", symbol: "XRP" },
 ];
 
 function buildSparklinePath(values, width = 240, height = 72) {
@@ -60,33 +80,51 @@ export default function Home() {
 	const [topAssets, setTopAssets] = useState(topAssetsFallback);
 	const [marketsError, setMarketsError] = useState("");
 	const [globalSnapshot, setGlobalSnapshot] = useState(null);
-	const [exchangeRates, setExchangeRates] = useState(null);
 	const [quickPrices, setQuickPrices] = useState(null);
 	const [statsError, setStatsError] = useState("");
 	const [liveCharts, setLiveCharts] = useState({});
 	const [isLoadingCharts, setIsLoadingCharts] = useState(true);
 	const [chartsError, setChartsError] = useState("");
-	const usdPerBtc =
-		typeof exchangeRates?.usd?.value === "number" && exchangeRates.usd.value > 0
-			? 1 / exchangeRates.usd.value
-			: null;
+	const usdPerBtc = typeof quickPrices?.bitcoin?.usd === "number" ? quickPrices.bitcoin.usd : null;
+	const hasChartData = LIVE_CHART_COINS.some((coin) => (liveCharts[coin.id] || []).length > 1);
 
 	useEffect(() => {
 		const fetchMarketStats = async () => {
 			try {
-				const [globalResponse, exchangeResponse, pricesResponse] = await Promise.all([
+				const trackedIds = [
+					"bitcoin",
+					"ethereum",
+					"litecoin",
+					...FALLBACK_LIVE_ASSETS.map((asset) => asset.apiId),
+				];
+				const [globalResponse, pricesResponse] = await Promise.all([
 					getGlobalData(),
-					getExchangeRates(),
-					getSimplePrices(["bitcoin", "ethereum", "litecoin"], "usd"),
+					getLivePrices(trackedIds),
 				]);
 
 				setGlobalSnapshot(globalResponse?.data || null);
-				setExchangeRates(exchangeResponse?.rates || null);
-				setQuickPrices(pricesResponse || null);
+				const nextLivePrices = FALLBACK_LIVE_ASSETS.reduce((accumulator, asset) => {
+					accumulator[asset.apiId] = pricesResponse?.[asset.apiId] || {};
+					return accumulator;
+				}, {});
+				const nextQuickPrices = {
+					bitcoin: pricesResponse?.bitcoin || null,
+					ethereum: pricesResponse?.ethereum || null,
+					litecoin: pricesResponse?.litecoin || null,
+				};
+
+				setLivePrices(nextLivePrices);
+				setQuickPrices(nextQuickPrices);
 				setStatsError("");
+				setLiveError("");
 			} catch (error) {
-				setStatsError(resolveErrorMessage(error, "Current prices are temporarily unavailable."));
+				setGlobalSnapshot(FALLBACK_GLOBAL_SNAPSHOT);
+				setQuickPrices(FALLBACK_QUICK_PRICES);
+				setLivePrices(FALLBACK_LIVE_PRICES);
+				setStatsError("Using fallback market data while live data is temporarily unavailable.");
+				setLiveError(resolveErrorMessage(error, "Realtime prices are temporarily unavailable."));
 			}
+			setIsLoadingLive(false);
 		};
 
 		const fetchTopAssets = async () => {
@@ -108,24 +146,7 @@ export default function Home() {
 					setMarketsError("");
 				}
 			} catch (error) {
-				setMarketsError(
-					error instanceof Error ? error.message : "Top assets are temporarily unavailable."
-				);
-			}
-		};
-
-		const fetchLivePrices = async (assets) => {
-			try {
-				const ids = assets.map((asset) => asset.apiId);
-				const data = await getLivePrices(ids);
-				setLivePrices(data);
-				setLiveError("");
-			} catch (error) {
-				setLiveError(
-					error instanceof Error ? error.message : "Live prices unavailable at the moment."
-				);
-			} finally {
-				setIsLoadingLive(false);
+				setMarketsError(resolveErrorMessage(error, "Showing fallback top assets while live data is unavailable."));
 			}
 		};
 
@@ -155,7 +176,8 @@ export default function Home() {
 						: ""
 				);
 			} catch (error) {
-				setChartsError(resolveErrorMessage(error, "Live market charts are temporarily unavailable."));
+				setLiveCharts(FALLBACK_CHARTS);
+				setChartsError(resolveErrorMessage(error, "Using fallback chart data while live data is unavailable."));
 			} finally {
 				setIsLoadingCharts(false);
 			}
@@ -170,9 +192,8 @@ export default function Home() {
 			// Fetch once on mount, then keep prices/charts fresh with a shared 5 minute cadence.
 			await fetchMarketStats();
 			await fetchTopAssets();
-			await fetchLivePrices(selectedAssets);
 			await fetchLiveCharts();
-			intervalId = setInterval(() => fetchLivePrices(selectedAssets), 300000);
+			intervalId = setInterval(fetchMarketStats, 300000);
 			chartIntervalId = setInterval(fetchLiveCharts, 300000);
 		};
 
@@ -384,53 +405,58 @@ export default function Home() {
 
 							{isLoadingCharts ? (
 								<p className="text-sm text-slate-500">Loading realtime charts...</p>
-							) : chartsError ? (
-								<p className="text-sm text-rose-600">{chartsError}</p>
 							) : (
-								<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-									{LIVE_CHART_COINS.map((coin) => {
-										const points = liveCharts[coin.id] || [];
-										const values = points.map(([, price]) => price).filter((price) => typeof price === "number");
-										const latest = values.length ? values[values.length - 1] : null;
-										const first = values.length ? values[0] : null;
-										const change =
-											typeof latest === "number" && typeof first === "number" && first !== 0
-												? ((latest - first) / first) * 100
-												: null;
-										const path = buildSparklinePath(values);
+								<>
+									{chartsError ? <p className="mb-3 text-sm text-amber-600">{chartsError}</p> : null}
+									{hasChartData ? (
+										<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+											{LIVE_CHART_COINS.map((coin) => {
+												const points = liveCharts[coin.id] || [];
+												const values = points.map(([, price]) => price).filter((price) => typeof price === "number");
+												const latest = values.length ? values[values.length - 1] : null;
+												const first = values.length ? values[0] : null;
+												const change =
+													typeof latest === "number" && typeof first === "number" && first !== 0
+														? ((latest - first) / first) * 100
+														: null;
+												const path = buildSparklinePath(values);
 
-										return (
-											<div key={coin.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-												<p className="text-sm font-semibold text-slate-900">{coin.label}</p>
-												<p className="mt-1 text-lg font-semibold text-slate-900">
-													{typeof latest === "number"
-														? `$${latest.toLocaleString(undefined, {
-															maximumFractionDigits: latest > 1 ? 2 : 4,
-														})}`
-														: "N/A"}
-												</p>
-												<p
-													className={`text-xs font-medium ${
-														typeof change === "number" && change >= 0 ? "text-emerald-600" : "text-rose-600"
-													}`}
-												>
-													{typeof change === "number" ? `${change.toFixed(2)}% (24h)` : "N/A"}
-												</p>
-												<svg viewBox="0 0 240 72" className="mt-3 h-16 w-full">
-													{path ? (
-														<path
-															d={path}
-															fill="none"
-															stroke={typeof change === "number" && change >= 0 ? "#059669" : "#dc2626"}
-															strokeWidth="2"
-															strokeLinecap="round"
-														/>
-													) : null}
-												</svg>
-											</div>
-										);
-									})}
-								</div>
+												return (
+													<div key={coin.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+														<p className="text-sm font-semibold text-slate-900">{coin.label}</p>
+														<p className="mt-1 text-lg font-semibold text-slate-900">
+															{typeof latest === "number"
+																? `$${latest.toLocaleString(undefined, {
+																	maximumFractionDigits: latest > 1 ? 2 : 4,
+																})}`
+																: "N/A"}
+														</p>
+														<p
+															className={`text-xs font-medium ${
+																typeof change === "number" && change >= 0 ? "text-emerald-600" : "text-rose-600"
+															}`}
+														>
+															{typeof change === "number" ? `${change.toFixed(2)}% (24h)` : "N/A"}
+														</p>
+														<svg viewBox="0 0 240 72" className="mt-3 h-16 w-full">
+															{path ? (
+																<path
+																	d={path}
+																	fill="none"
+																	stroke={typeof change === "number" && change >= 0 ? "#059669" : "#dc2626"}
+																	strokeWidth="2"
+																	strokeLinecap="round"
+																/>
+															) : null}
+														</svg>
+													</div>
+												);
+											})}
+										</div>
+									) : (
+										<p className="text-sm text-rose-600">Live market charts are temporarily unavailable.</p>
+									)}
+								</>
 							)}
 						</section>
 					</div>

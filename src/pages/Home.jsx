@@ -40,6 +40,12 @@ function buildSparklinePath(values, width = 240, height = 72) {
 		.join(" ");
 }
 
+function resolveErrorMessage(error, fallbackMessage) {
+	if (!(error instanceof Error)) return fallbackMessage;
+	if (/failed to fetch/i.test(error.message)) return fallbackMessage;
+	return error.message;
+}
+
 export default function Home() {
 	const topAssetsFallback = [
 		{ name: "Bitcoin", symbol: "BTC", price: "$62,140" },
@@ -60,6 +66,10 @@ export default function Home() {
 	const [liveCharts, setLiveCharts] = useState({});
 	const [isLoadingCharts, setIsLoadingCharts] = useState(true);
 	const [chartsError, setChartsError] = useState("");
+	const usdPerBtc =
+		typeof exchangeRates?.usd?.value === "number" && exchangeRates.usd.value > 0
+			? 1 / exchangeRates.usd.value
+			: null;
 
 	useEffect(() => {
 		const fetchMarketStats = async () => {
@@ -75,9 +85,7 @@ export default function Home() {
 				setQuickPrices(pricesResponse || null);
 				setStatsError("");
 			} catch (error) {
-				setStatsError(
-					error instanceof Error ? error.message : "Current prices are temporarily unavailable."
-				);
+				setStatsError(resolveErrorMessage(error, "Current prices are temporarily unavailable."));
 			}
 		};
 
@@ -123,20 +131,31 @@ export default function Home() {
 
 		const fetchLiveCharts = async () => {
 			try {
-				const chartResults = await Promise.all(
+				const chartResults = await Promise.allSettled(
 					LIVE_CHART_COINS.map(async (coin) => {
 						const chartData = await getCoinMarketChart(coin.id, "usd", 1);
 						const points = Array.isArray(chartData?.prices) ? chartData.prices.slice(-40) : [];
-						return [coin.id, points];
+						return { id: coin.id, points };
 					})
 				);
 
-				setLiveCharts(Object.fromEntries(chartResults));
-				setChartsError("");
-			} catch (error) {
+				const successfulCharts = chartResults
+					.filter((result) => result.status === "fulfilled")
+					.map((result) => [result.value.id, result.value.points]);
+
+				setLiveCharts(Object.fromEntries(successfulCharts));
+
+				if (successfulCharts.length === 0) {
+					throw new Error("Live market charts are temporarily unavailable.");
+				}
+
 				setChartsError(
-					error instanceof Error ? error.message : "Live market charts are temporarily unavailable."
+					successfulCharts.length < LIVE_CHART_COINS.length
+						? "Some chart data is temporarily unavailable."
+						: ""
 				);
+			} catch (error) {
+				setChartsError(resolveErrorMessage(error, "Live market charts are temporarily unavailable."));
 			} finally {
 				setIsLoadingCharts(false);
 			}
@@ -309,8 +328,8 @@ export default function Home() {
 								</p>
 								<p>
 									USD per BTC:
-									{typeof exchangeRates?.btc?.value === "number"
-										? ` $${exchangeRates.btc.value.toLocaleString(undefined, {
+									{typeof usdPerBtc === "number"
+										? ` $${usdPerBtc.toLocaleString(undefined, {
 											maximumFractionDigits: 2,
 										})}`
 										: " N/A"}

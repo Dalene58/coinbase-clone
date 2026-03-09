@@ -17,8 +17,8 @@ export default function AppLayout({ children }) {
         <nav className="flex items-center gap-6 px-4 py-4 md:px-8 lg:px-12">
           <NavLink to="/" className="inline-flex items-center">
             <img
-              src="https://th.bing.com/th/id/OIP.8zoJ7gePbR2l782-2jBkzQHaHa?w=200&h=200&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3"
-              alt="Coinbase"
+              src="https://tse4.mm.bing.net/th/id/OIP.3a8sw23WNe5ELWaJ_H2IkQAAAA?pid=ImgDet&w=202&h=202&c=7&dpr=1.1&o=7&rm=3"
+              alt="KryptKhaos"
               className="h-8 w-8 rounded"
             />
           </NavLink>

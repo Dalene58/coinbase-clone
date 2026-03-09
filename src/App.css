@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+/* Custom animation for the React logo spin */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@utility animate-spin-slow {
+  animation: spin-slow infinite 20s linear;
+}

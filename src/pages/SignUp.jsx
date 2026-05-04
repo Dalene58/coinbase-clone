@@ -12,6 +12,7 @@ export default function SignUp() {
   const [email, setEmail] = useState('')
   const [organization, setOrganization] = useState('')
   const [organizationRole, setOrganizationRole] = useState('')
+  const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [savePassword, setSavePassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
@@ -36,6 +37,11 @@ export default function SignUp() {
   const handleContinue = () => {
     if (!email.trim()) {
       setStatusMessage('Please enter your email address.')
+      return
+    }
+
+    if (!name.trim()) {
+      setStatusMessage('Please enter your full name.')
       return
     }
 
@@ -68,7 +74,7 @@ export default function SignUp() {
           ? requiresOrganizationRole
             ? `${organization.trim()} - ${organizationRole.trim()}`
             : organization.trim()
-          : '',
+          : name.trim(),
       })
       setStatusMessage(result?.message || 'Account created successfully.')
     } catch (error) {
@@ -176,6 +182,18 @@ export default function SignUp() {
                   className="w-full rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-white outline-none ring-blue-400 placeholder:text-blue-200/70 focus:ring-2"
                 />
 
+                <label htmlFor="name" className="mb-2 mt-5 block text-base font-semibold text-white">
+                  Full name
+                </label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Your full name"
+                  className="w-full rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-white outline-none ring-blue-400 placeholder:text-blue-200/70 focus:ring-2"
+                />
+
                 {requiresOrganization ? (
                   <>
                     <label htmlFor="organization" className="mb-2 mt-5 block text-base font-semibold text-white">
@@ -220,6 +238,9 @@ export default function SignUp() {
               <>
                 <p className="mb-2 mt-7 text-base font-semibold text-white">Email</p>
                 <p className="mb-5 rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-blue-100">{email}</p>
+
+                <p className="mb-2 text-base font-semibold text-white">Name</p>
+                <p className="mb-5 rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-blue-100">{name}</p>
 
                 {requiresOrganization ? (
                   <>

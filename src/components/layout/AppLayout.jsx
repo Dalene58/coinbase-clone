@@ -42,6 +42,12 @@ export default function AppLayout({ children }) {
           <NavLink to="/learn" className={linkClassName}>
             Learn
           </NavLink>
+          <NavLink to="/crypto" className={linkClassName}>
+            Crypto
+          </NavLink>
+          <NavLink to="/profile" className={linkClassName}>
+            Profile
+          </NavLink>
           <NavLink to="/signin" className={linkClassName}>
             Sign In
           </NavLink>

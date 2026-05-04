@@ -11,6 +11,8 @@ const LearnGuideDetail = lazy(() => import('./pages/LearnGuideDetail'))
 const LearnPathDetail = lazy(() => import('./pages/LearnPathDetail'))
 const SignIn = lazy(() => import('./pages/SignIn'))
 const SignUp = lazy(() => import('./pages/SignUp'))
+const Profile = lazy(() => import('./pages/Profile'))
+const Crypto = lazy(() => import('./pages/Crypto'))
 
 function App() {
   return (
@@ -23,6 +25,8 @@ function App() {
           <Route path="/learn" element={<Learn />} />
           <Route path="/learn/:slug" element={<LearnGuideDetail />} />
           <Route path="/learn/path/:slug" element={<LearnPathDetail />} />
+          <Route path="/crypto" element={<Crypto />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/signup/personal" element={<SignUp />} />

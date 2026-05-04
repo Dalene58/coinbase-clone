@@ -207,22 +207,6 @@ export default function Home() {
 
 	return (
 		<main className="px-4 py-10 md:px-8 lg:px-12">
-			{/* Project Disclaimer Notice - Top after nav */}
-			<section className="mx-auto max-w-4xl rounded-2xl border-2 border-blue-300 bg-blue-50 p-6 shadow-lg md:p-8">
-				<div className="flex items-center justify-center gap-3 text-center">
-					<svg className="h-6 w-6 flex-shrink-0 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-2.268-.833-3.038 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-					</svg>
-					<div className="text-sm md:text-base">
-						<p className="font-semibold text-blue-900">
-							⚠️ This is a demo project site only!
-						</p>
-						<p className="mt-1 text-blue-800">
-							Do NOT use real passwords or funds. All data is simulated/mock.
-						</p>
-					</div>
-				</div>
-			</section>
 			<section className="space-y-8">
 				<div className="space-y-6">
 					<section className="grid gap-6 md:grid-cols-12 md:items-start">

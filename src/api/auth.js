@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://interim-assesment-dalene58.onrender.com/api';
+const API_BASE = 'https://interim-assesment-dalene58.onrender.com/api';
 
 const apiCall = async (endpoint, options = {}) => {
   try {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getCryptoAll } from "../data/cryptoApi";
+//import { getCryptoAll } from "../data/cryptoApi";
 
 const FALLBACK_LIVE_ASSETS = [
 	{ label: "Tether", symbol: "USDT", apiId: "tether" },

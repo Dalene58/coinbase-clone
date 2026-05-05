@@ -95,6 +95,13 @@ export default function SignUp() {
       </Link>
 
       <section className="mx-auto mt-12 w-full max-w-md md:mt-16">
+      <div className="bg-red-100 border border-red-400 text-red-800 p-4 rounded-xl mb-6">
+  <p className="font-semibold mb-1">⚠️ Demo Application Disclaimer</p>
+  <p className="text-sm leading-relaxed">
+    This application is for demonstration and educational purposes only. It does not provide secure authentication.
+    Do not use real passwords or personal information. Any data entered here is not protected.
+  </p>
+</div>  
         {step === 'choose' ? (
           <>
             <h1 className="text-3xl font-semibold tracking-tight">Create your account</h1>

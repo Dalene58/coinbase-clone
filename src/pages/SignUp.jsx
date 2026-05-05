@@ -1,13 +1,18 @@
 import { useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { signUpWithEmail } from '../api/auth'
+import { useAuth } from '../context/AuthContext'
 
 export default function SignUp() {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const { login } = useAuth()
+
   const [accountType, setAccountType] = useState(() => {
     const queryType = String(searchParams.get('account') || 'personal').toLowerCase()
     return ['business', 'developer'].includes(queryType) ? queryType : 'personal'
   })
+
   const [step, setStep] = useState('choose')
   const [email, setEmail] = useState('')
   const [organization, setOrganization] = useState('')
@@ -21,6 +26,7 @@ export default function SignUp() {
 
   const requiresOrganization = accountType !== 'personal'
   const requiresOrganizationRole = accountType === 'developer'
+
   const accountHeading =
     accountType === 'business'
       ? 'Create your business account'
@@ -35,25 +41,12 @@ export default function SignUp() {
   }
 
   const handleContinue = () => {
-    if (!email.trim()) {
-      setStatusMessage('Please enter your email address.')
-      return
-    }
-
-    if (!name.trim()) {
-      setStatusMessage('Please enter your full name.')
-      return
-    }
-
-    if (requiresOrganization && !organization.trim()) {
-      setStatusMessage('Please enter your organization name.')
-      return
-    }
-
-    if (requiresOrganizationRole && !organizationRole.trim()) {
-      setStatusMessage('Please enter your role in the organization.')
-      return
-    }
+    if (!email.trim()) return setStatusMessage('Please enter your email address.')
+    if (!name.trim()) return setStatusMessage('Please enter your full name.')
+    if (requiresOrganization && !organization.trim())
+      return setStatusMessage('Please enter your organization name.')
+    if (requiresOrganizationRole && !organizationRole.trim())
+      return setStatusMessage('Please enter your role in the organization.')
 
     setStatusMessage('')
     setStep('password')
@@ -66,8 +59,9 @@ export default function SignUp() {
     }
 
     setIsSubmitting(true)
+
     try {
-      const result = await signUpWithEmail({
+      const response = await signUpWithEmail({
         email,
         password,
         name: requiresOrganization
@@ -76,7 +70,23 @@ export default function SignUp() {
             : organization.trim()
           : name.trim(),
       })
-      setStatusMessage(result?.message || 'Account created successfully.')
+
+      // ✅ CREATE USER OBJECT
+      const userData = {
+        name: requiresOrganization
+          ? requiresOrganizationRole
+            ? `${organization.trim()} - ${organizationRole.trim()}`
+            : organization.trim()
+          : name.trim(),
+        email,
+      }
+
+      // ✅ SAVE GLOBAL STATE
+      login(userData)
+
+      // ✅ REDIRECT HOME
+      navigate('/')
+
     } catch (error) {
       setStatusMessage(error?.message || 'Unable to create account right now.')
     } finally {
@@ -86,7 +96,7 @@ export default function SignUp() {
 
   return (
     <main className="min-h-screen bg-[#05080f] px-4 py-6 text-white md:px-6 lg:px-8">
-      <Link to="/" aria-label="Go to home" className="inline-flex items-center">
+      <Link to="/" className="inline-flex items-center">
         <img
           src="https://th.bing.com/th/id/OIP.8zoJ7gePbR2l782-2jBkzQHaHa?w=200&h=200&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3"
           alt="Coinbase"
@@ -94,237 +104,180 @@ export default function SignUp() {
         />
       </Link>
 
-      <section className="mx-auto mt-12 w-full max-w-md md:mt-16">
-      <div className="bg-red-100 border border-red-400 text-red-800 p-4 rounded-xl mb-6">
-  <p className="font-semibold mb-1">⚠️ Demo Application Disclaimer</p>
-  <p className="text-sm leading-relaxed">
-    This application is for demonstration and educational purposes only. It does not provide secure authentication.
-    Do not use real passwords or personal information. Any data entered here is not protected.
-  </p>
-</div>  
-        {step === 'choose' ? (
-          <>
-            <h1 className="text-3xl font-semibold tracking-tight">Create your account</h1>
-            <p className="mt-3 text-base leading-7 text-slate-300">
-              Choose the account type that best fits your goals.
-            </p>
+      <div className="mx-auto mt-8 max-w-md">
+        <h1 className="text-3xl font-bold">{accountHeading}</h1>
+        <p className="mt-2 text-sm text-slate-400">
+          Already have a Coinbase account?{' '}
+          <Link to="/signin" className="text-blue-400 hover:text-blue-300">
+            Sign in
+          </Link>
+        </p>
 
-            <div className="mt-6 flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => chooseAccount('personal')}
-                className="flex w-full items-center gap-4 rounded-2xl border border-blue-500/60 bg-blue-950/70 p-4 text-left text-white transition hover:bg-blue-900/80"
-              >
-                <img
-                  src="https://tse2.mm.bing.net/th/id/OIP.a9zO-lmahnvAzXA7hDWM5QHaHa?pid=ImgDet&w=179&h=179&c=7&dpr=1.3&o=7&rm=3"
-                  alt="Personal account"
-                  className="h-10 w-10 rounded-full border border-blue-500"
-                />
-                <div>
-                  <p className="text-base font-semibold">Personal</p>
-                  <p className="mt-1 text-xs text-slate-300">For individuals buying, selling, and managing crypto.</p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => chooseAccount('business')}
-                className="flex w-full items-center gap-4 rounded-2xl border border-blue-500/60 bg-blue-950/70 p-4 text-left text-white transition hover:bg-blue-900/80"
-              >
-                <img
-                  src="https://tse1.mm.bing.net/th/id/OIP.RO3GhrprV70K6m6K3d1w7gAAAA?pid=ImgDet&w=92&h=97&c=7&dpr=1.3&o=7&rm=3"
-                  alt="Business account"
-                  className="h-10 w-10 rounded-full border border-blue-500"
-                />
-                <div>
-                  <p className="text-base font-semibold">Business</p>
-                  <p className="mt-1 text-xs text-slate-300">For companies, teams, and treasury management.</p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => chooseAccount('developer')}
-                className="flex w-full items-center gap-4 rounded-2xl border border-blue-500/60 bg-blue-950/70 p-4 text-left text-white transition hover:bg-blue-900/80"
-              >
-                <img
-                  src="https://tse1.mm.bing.net/th/id/OIP.V8S6ImuGgbTtKXutLzVFagAAAA?pid=ImgDet&w=85&h=85&c=7&o=7&rm=3"
-                  alt="Developer account"
-                  className="h-10 w-10 rounded-full border border-blue-500"
-                />
-                <div>
-                  <p className="text-base font-semibold">Developers</p>
-                  <p className="mt-1 text-xs text-slate-300">For developers integrating APIs and crypto tools.</p>
-                </div>
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
+        {step === 'choose' && (
+          <div className="mt-8 space-y-4">
             <button
-              type="button"
-              onClick={() => {
-                setStep('choose')
-                setStatusMessage('')
-              }}
-              className="mb-4 text-sm font-semibold text-[#3f6fe5] hover:underline"
+              onClick={() => chooseAccount('personal')}
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 p-4 text-left hover:bg-slate-800 transition"
             >
-              Back
+              <h3 className="font-semibold">Personal</h3>
+              <p className="mt-1 text-sm text-slate-400">
+                Trade crypto and manage your portfolio
+              </p>
             </button>
+            <button
+              onClick={() => chooseAccount('business')}
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 p-4 text-left hover:bg-slate-800 transition"
+            >
+              <h3 className="font-semibold">Business</h3>
+              <p className="mt-1 text-sm text-slate-400">
+                Accept crypto payments and manage business finances
+              </p>
+            </button>
+            <button
+              onClick={() => chooseAccount('developer')}
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 p-4 text-left hover:bg-slate-800 transition"
+            >
+              <h3 className="font-semibold">Developer</h3>
+              <p className="mt-1 text-sm text-slate-400">
+                Build crypto applications and access APIs
+              </p>
+            </button>
+          </div>
+        )}
 
-            <h1 className="text-3xl font-semibold tracking-tight">{accountHeading}</h1>
-            <p className="mt-3 text-base leading-7 text-slate-300">Access all that Coinbase has to offer with a single account.</p>
+        {step === 'details' && (
+          <form className="mt-8 space-y-4" onSubmit={(e) => { e.preventDefault(); handleContinue(); }}>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-300">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="name@example.com"
+                required
+              />
+            </div>
 
-            {step === 'details' ? (
-              <>
-                <label htmlFor="email" className="mb-2 mt-7 block text-base font-semibold text-white">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder="Your email address"
-                  className="w-full rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-white outline-none ring-blue-400 placeholder:text-blue-200/70 focus:ring-2"
-                />
-
-                <label htmlFor="name" className="mb-2 mt-5 block text-base font-semibold text-white">
+            {!requiresOrganization ? (
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-slate-300">
                   Full name
                 </label>
                 <input
                   id="name"
                   type="text"
                   value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Your full name"
-                  className="w-full rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-white outline-none ring-blue-400 placeholder:text-blue-200/70 focus:ring-2"
+                  onChange={(e) => setName(e.target.value)}
+                  className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="John Doe"
+                  required
                 />
-
-                {requiresOrganization ? (
-                  <>
-                    <label htmlFor="organization" className="mb-2 mt-5 block text-base font-semibold text-white">
-                      Which organization do you work for?
-                    </label>
-                    <input
-                      id="organization"
-                      type="text"
-                      value={organization}
-                      onChange={(event) => setOrganization(event.target.value)}
-                      placeholder="Organization name"
-                      className="w-full rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-white outline-none ring-blue-400 placeholder:text-blue-200/70 focus:ring-2"
-                    />
-
-                    {requiresOrganizationRole ? (
-                      <>
-                        <label htmlFor="organization-role" className="mb-2 mt-5 block text-base font-semibold text-white">
-                          What is your role in the organization?
-                        </label>
-                        <input
-                          id="organization-role"
-                          type="text"
-                          value={organizationRole}
-                          onChange={(event) => setOrganizationRole(event.target.value)}
-                          placeholder="e.g. Backend Engineer"
-                          className="w-full rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-white outline-none ring-blue-400 placeholder:text-blue-200/70 focus:ring-2"
-                        />
-                      </>
-                    ) : null}
-                  </>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={handleContinue}
-                  className="mt-8 w-full rounded-full bg-[#3f6fe5] px-4 py-4 text-xl font-semibold text-[#020617] hover:bg-[#4e7bf0]"
-                >
-                  Continue
-                </button>
-              </>
+              </div>
             ) : (
               <>
-                <p className="mb-2 mt-7 text-base font-semibold text-white">Email</p>
-                <p className="mb-5 rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-blue-100">{email}</p>
-
-                <p className="mb-2 text-base font-semibold text-white">Name</p>
-                <p className="mb-5 rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-blue-100">{name}</p>
-
-                {requiresOrganization ? (
-                  <>
-                    <p className="mb-2 text-base font-semibold text-white">Organization</p>
-                    <p className="mb-5 rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-blue-100">
-                      {organization}
-                    </p>
-
-                    {requiresOrganizationRole ? (
-                      <>
-                        <p className="mb-2 text-base font-semibold text-white">Role</p>
-                        <p className="mb-5 rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-blue-100">
-                          {organizationRole}
-                        </p>
-                      </>
-                    ) : null}
-                  </>
-                ) : null}
-
-                <label htmlFor="password" className="mb-2 block text-base font-semibold text-white">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Create a password"
-                  className="w-full rounded-2xl border border-blue-500/60 bg-blue-950/60 px-4 py-3 text-base text-white outline-none ring-blue-400 placeholder:text-blue-200/70 focus:ring-2"
-                />
-
-                <label className="mt-5 flex items-center gap-2 text-sm text-slate-300">
+                <div>
+                  <label htmlFor="organization" className="block text-sm font-medium text-slate-300">
+                    Organization name
+                  </label>
                   <input
-                    type="checkbox"
-                    checked={savePassword}
-                    onChange={(event) => setSavePassword(event.target.checked)}
-                    className="h-4 w-4 rounded border-slate-600 bg-transparent text-blue-500 focus:ring-blue-500"
+                    id="organization"
+                    type="text"
+                    value={organization}
+                    onChange={(e) => setOrganization(e.target.value)}
+                    className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    placeholder="Acme Corp"
+                    required
                   />
-                  Save password
-                </label>
+                </div>
 
-                <label className="mt-2 flex items-center gap-2 text-sm text-slate-300">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(event) => setRememberMe(event.target.checked)}
-                    className="h-4 w-4 rounded border-slate-600 bg-transparent text-blue-500 focus:ring-blue-500"
-                  />
-                  Remember me
-                </label>
-
-                <button
-                  type="button"
-                  onClick={handleCreateAccount}
-                  disabled={isSubmitting}
-                  className="mt-6 w-full rounded-full bg-[#3f6fe5] px-4 py-4 text-xl font-semibold text-[#020617] hover:bg-[#4e7bf0]"
-                >
-                  {isSubmitting ? 'Creating account...' : 'Create account'}
-                </button>
+                {requiresOrganizationRole && (
+                  <div>
+                    <label htmlFor="organizationRole" className="block text-sm font-medium text-slate-300">
+                      Your role
+                    </label>
+                    <input
+                      id="organizationRole"
+                      type="text"
+                      value={organizationRole}
+                      onChange={(e) => setOrganizationRole(e.target.value)}
+                      className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Developer"
+                      required
+                    />
+                  </div>
+                )}
               </>
             )}
-          </>
+
+            <button
+              type="submit"
+              className="w-full rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition"
+            >
+              Continue
+            </button>
+          </form>
         )}
 
-        {statusMessage ? <p className="mt-4 text-sm text-slate-300">{statusMessage}</p> : null}
+        {step === 'password' && (
+          <form className="mt-8 space-y-4" onSubmit={(e) => { e.preventDefault(); handleCreateAccount(); }}>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-300">
+                Create password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Min. 8 characters"
+                minLength={8}
+                required
+              />
+            </div>
 
-        <p className="mt-6 text-lg text-white">
-          Already have an account?{' '}
-          <Link to="/signin" className="font-semibold text-[#3f6fe5] hover:underline">
-            Sign in
-          </Link>
-        </p>
+            <div className="space-y-3">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={savePassword}
+                  onChange={(e) => setSavePassword(e.target.checked)}
+                  className="mr-2 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-slate-300">Save password</span>
+              </label>
 
-        <p className="mt-8 text-sm text-slate-500">
-          By creating an account you certify that you are over the age of 18 and agree to our Privacy Policy and Cookie Policy.
-        </p>
-      </section>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="mr-2 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-slate-300">Remember me for 30 days</span>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 transition disabled:opacity-50"
+            >
+              {isSubmitting ? 'Creating account...' : 'Create account'}
+            </button>
+          </form>
+        )}
+
+        {statusMessage && (
+          <div className="mt-4 rounded-lg bg-red-900/50 border border-red-800 p-3">
+            <p className="text-sm text-red-300">{statusMessage}</p>
+          </div>
+        )}
+      </div>
     </main>
   )
 }

@@ -1,106 +1,76 @@
-const USERS_STORAGE_KEY = 'coinbase_clone_users'
-const ACTIVE_USER_STORAGE_KEY = 'coinbase_clone_active_user'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://interim-assesment-dalene58.onrender.com/api';
 
-function readUsers() {
+const apiCall = async (endpoint, options = {}) => {
   try {
-    const payload = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]')
-    return Array.isArray(payload) ? payload : []
-  } catch {
-    return []
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      ...options,
+    };
+    
+    const response = await fetch(`${API_BASE}${endpoint}`, config);
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/signin';
+        return;
+      }
+      const error = await response.json();
+      throw new Error(error.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
   }
-}
-
-function writeUsers(users) {
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users))
-}
-
-function writeActiveUser(user) {
-  localStorage.setItem(ACTIVE_USER_STORAGE_KEY, JSON.stringify(user))
-}
-
-function wait(ms = 250) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
+};
 
 export async function continueWithEmail(email) {
-  await wait()
   if (!String(email || '').trim()) {
-    throw new Error('Email is required.')
+    throw new Error('Email is required.');
   }
-
-  return { message: 'Email accepted. Continue with authentication.' }
+  return { message: 'Email accepted. Continue with authentication.' };
 }
 
 export async function signUpWithEmail({ email, password, name }) {
-  await wait()
-  const normalizedEmail = String(email || '').trim().toLowerCase()
-  const normalizedPassword = String(password || '').trim()
-
-  if (!normalizedEmail) {
-    throw new Error('Email is required.')
-  }
-
-  if (normalizedPassword.length < 8) {
-    throw new Error('Password must be at least 8 characters long.')
-  }
-
-  const users = readUsers()
-  const exists = users.some((user) => user.email === normalizedEmail)
-  if (exists) {
-    throw new Error('An account with this email already exists.')
-  }
-
-  users.push({
-    email: normalizedEmail,
-    password: normalizedPassword,
-    name: name || '',
-    createdAt: new Date().toISOString(),
-  })
-
-  writeUsers(users)
-  return { message: 'Account created successfully.' }
+  return apiCall('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, name }),
+  });
 }
 
 export async function signInWithEmail({ email, password }) {
-  await wait()
-  const normalizedEmail = String(email || '').trim().toLowerCase()
-  const normalizedPassword = String(password || '').trim()
-  const users = readUsers()
-
-  const matchedUser = users.find(
-    (user) => user.email === normalizedEmail && user.password === normalizedPassword
-  )
-
-  if (!matchedUser) {
-    throw new Error('Invalid email or password.')
+  const response = await apiCall('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+  
+  if (response.token) {
+    localStorage.setItem('token', response.token);
   }
-
-  writeActiveUser({
-    email: matchedUser.email,
-    name: matchedUser.name || '',
-    signedInAt: new Date().toISOString(),
-  })
-
-  return { message: 'Signed in successfully.' }
+  
+  return response;
 }
 
-export function getActiveUser() {
+export async function getActiveUser() {
   try {
-    const payload = JSON.parse(localStorage.getItem(ACTIVE_USER_STORAGE_KEY) || 'null')
-    if (!payload || typeof payload !== 'object') {
-      return null
-    }
-
-    return {
-      email: String(payload.email || ''),
-      name: String(payload.name || ''),
-      signedInAt: String(payload.signedInAt || ''),
-    }
-  } catch {
-    return null
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    
+    const response = await apiCall('/auth/me');
+    return response.user || response;
+  } catch (error) {
+    console.error('Error fetching active user:', error);
+    localStorage.removeItem('token');
+    return null;
   }
 }
 
 export function clearActiveUser() {
-  localStorage.removeItem(ACTIVE_USER_STORAGE_KEY)
+  localStorage.removeItem('token');
 }

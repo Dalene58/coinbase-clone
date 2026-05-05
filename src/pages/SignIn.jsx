@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { continueWithEmail, signInWithEmail } from '../api/auth'
+import { useAuth } from '../context/AuthContext'
 
 export default function SignIn() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [step, setStep] = useState('email')
@@ -24,6 +26,9 @@ export default function SignIn() {
         setStep('password')
       } else {
         const result = await signInWithEmail({ email, password })
+        if (result.user) {
+          login(result.user)
+        }
         setStatusMessage(result?.message || 'Signed in successfully.')
         navigate('/')
       }
@@ -52,7 +57,7 @@ export default function SignIn() {
 
       <section className="mx-auto flex w-full max-w-[448px] flex-col px-4 pb-36 pt-8 md:pt-10">
         <form onSubmit={handleSubmit} className="w-full">
-          <h1 className="text-[28px] font-semibold leading-9">Sign in to Coinbase</h1>
+          <h1 className="text-[28px] font-semibold leading-9">Sign in to Vrypto</h1>
 
           {step === 'email' ? (
             <div className="mt-6">
@@ -158,10 +163,21 @@ export default function SignIn() {
           </Link>
         </div>
 
+        <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-sm text-yellow-800 font-medium mb-2">
+            ⚠️ Project Disclaimer
+          </p>
+          <p className="text-xs text-yellow-700">
+            This is a demonstration project for educational purposes only. 
+            No real cryptocurrency transactions should be made. 
+            Do not use real passwords or personal information.
+          </p>
+        </div>
+        
         <p className="text-center text-[13px] text-[#8a919e]">
           Not your device? Use a private window. See our{' '}
           <a
-            href="https://coinbase.com/legal/privacy"
+            href="https://vrypto.com/legal/privacy"
             target="_blank"
             rel="noopener noreferrer"
             className="underline hover:text-white"

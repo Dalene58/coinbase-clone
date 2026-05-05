@@ -27,7 +27,10 @@ export default function Profile() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    navigate('/signin');
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0b0d] flex items-center justify-center p-6">

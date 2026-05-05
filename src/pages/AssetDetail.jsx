@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { getCoinDetail, getCoinMarketChart, getMarkets } from "../data/coingecko";
 
+
 const ID_ALIASES = {
   btc: "bitcoin",
   eth: "ethereum",

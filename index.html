@@ -1,36 +1,826 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/kryptkhaos.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="KryptKhaos - Buy and Sell Bitcoin, Ethereum, and more."
-    />
-    <meta property="og:type" content="website" />
-    <meta
-      property="og:title"
-      content="KryptKhaos - Buy and Sell Bitcoin, Ethereum, and more"
-    />
-    <meta
-      property="og:description"
-      content="KryptKhaos - Buy and Sell Bitcoin, Ethereum, and more."
-    />
-    <meta name="twitter:card" content="summary" />
-    <meta
-      name="twitter:title"
-      content="KryptKhaos - Buy and Sell Bitcoin, Ethereum, and more"
-    />
-    <meta
-      name="twitter:description"
-      content="KryptKhaos - Buy and Sell Bitcoin, Ethereum, and more."
-    />
-    <link href="/src/App.css" rel="stylesheet" />
-    <title>KryptKhaos - Buy and Sell Bitcoin, Ethereum, and more</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypto Platform - Live Prices</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    .price-up { color: #10b981; }
+    .price-down { color: #ef4444; }
+    .refresh-btn {
+      transition: all 0.2s ease;
+    }
+    .refresh-btn:active {
+      transform: rotate(90deg);
+    }
+    .blue-black-gradient {
+      background: linear-gradient(135deg, #0a0b1e 0%, #0b1120 30%, #0f172a 60%, #1e3a8a 100%);
+    }
+  </style>
+</head>
+<body class="bg-white">
+  
+
+  <main class="max-w-6xl mx-auto px-6 py-12 md:py-20">
+    <!-- Navbar -->
+<!-- Navbar -->
+<nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
+  <div class="max-w-6xl mx-auto px-6 py-4">
+    <div class="flex justify-between items-center">
+      
+      <!-- Logo Icon ONLY (removed CoinBase name) -->
+      <div class="flex items-center">
+        <div class="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center">
+          <span class="text-white font-bold text-sm">₿</span>
+        </div>
+      </div>
+      
+      <!-- Desktop Navigation Links -->
+      <div class="hidden md:flex items-center gap-6">
+        <!-- Your Image placed beside Home link -->
+        <img 
+          src="https://tse4.mm.bing.net/th/id/OIP.3a8sw23WNe5ELWaJ_H2IkQAAAA?pid=ImgDet&w=202&h=202&c=7&dpr=1.1&o=7&rm=3" 
+          alt="Navigation icon"
+          class="w-6 h-6 rounded-full object-cover"
+          onerror="this.src='https://placehold.co/24x24/0052ff/ffffff?text=⚡'"
+        />
+        <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition">Home</a>
+        <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition">Features</a>
+        <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition">Assets</a>
+        <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition">Pricing</a>
+        <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition">Learn</a>
+      </div>
+      
+      <!-- Right Side Buttons -->
+      <div class="flex items-center gap-3">
+        <button class="hidden sm:block text-gray-600 hover:text-blue-600 font-medium transition">
+          Log in
+        </button>
+        <button class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-full font-semibold text-sm transition shadow-sm">
+          Sign up
+        </button>
+        
+        <!-- Mobile Menu Button -->
+        <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition">
+          <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+      
+    </div>
+    
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="hidden md:hidden mt-4 pt-4 border-t border-gray-100 flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <img 
+          src="https://tse4.mm.bing.net/th/id/OIP.3a8sw23WNe5ELWaJ_H2IkQAAAA?pid=ImgDet&w=202&h=202&c=7&dpr=1.1&o=7&rm=3" 
+          alt="Navigation icon"
+          class="w-6 h-6 rounded-full object-cover"
+          onerror="this.src='https://placehold.co/24x24/0052ff/ffffff?text=⚡'"
+        />
+        <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition py-1">Home</a>
+      </div>
+      <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition py-1">Features</a>
+      <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition py-1">Assets</a>
+      <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition py-1">Pricing</a>
+      <a href="#" class="text-gray-600 hover:text-blue-600 font-medium transition py-1">Learn</a>
+      <div class="pt-2 flex gap-3">
+        <button class="flex-1 text-gray-600 hover:text-blue-600 font-medium py-2 border border-gray-200 rounded-full">Log in</button>
+        <button class="flex-1 bg-blue-600 text-white py-2 rounded-full font-semibold">Sign up</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<script>
+  // Mobile menu toggle
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  
+  if (mobileMenuBtn && mobileMenu) {
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  }
+</script>
+    <!-- ✅ PUT THE RED DISCLAIMER HERE ✅ -->
+  <div class="bg-red-50 border-l-4 border-red-500 rounded-md p-3 mb-6">
+    <p class="text-red-700 text-xs md:text-sm font-medium text-center">
+      ⚠️ DISCLAIMER: This page is for educational/school project purposes only. 
+      Do not enter any real passwords or personal information. All data shown is simulated or from public APIs.
+    </p>
+  </div>
+    <!-- Hero Section - Image on LEFT, text on RIGHT -->
+    <div class="flex flex-col md:flex-row gap-8 items-center mb-16">
+      <div class="md:w-1/2">
+        <img 
+          src="https://www.bing.com/th/id/OIP.Tdoy4Hi3hnrxjQKg7UMXKAHaMt?w=1200&h=2060&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3" 
+          alt="Bitcoin chart and market data"
+          class="rounded-2xl shadow-lg border border-gray-200 w-full object-cover"
+        />
+      </div>
+      <div class="md:w-1/2 text-left">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          The next era of money is here
+        </h1>
+        <p class="text-lg text-gray-600 mb-6">
+          Buy and sell crypto on a platform you can rely on.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 mb-6">
+          <input 
+            type="email" 
+            placeholder="email@domain.com" 
+            class="border border-gray-300 rounded-full px-5 py-2.5 w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full font-semibold transition">
+            Sign up
+          </button>
+        </div>
+        <h6 class="text-xs text-gray-500 font-normal">
+          ⚠️ Stocks and prediction markets not available in your jurisdiction.
+        </h6>
+      </div>
+    </div>
+
+    <!-- Discover Crypto Section -->
+    <div class="bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-2xl p-8 md:p-10 mb-12">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+        <div class="md:w-1/2">
+          <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+            Discover crypto like Bitcoin, Ethereum, and Dogecoin.
+          </h2>
+          <p class="text-gray-600 text-lg mb-6">
+            Easily and safely buy, sell, and manage hundreds of digital assets.
+          </p>
+          <button class="border border-gray-300 hover:border-blue-400 hover:bg-blue-50 px-6 py-3 rounded-full font-medium transition whitespace-nowrap">
+            View more assets →
+          </button>
+        </div>
+        <div class="md:w-1/2 flex justify-end">
+          <img 
+            src="https://www.bing.com/th/id/OIP.lORdWcQ75OtCu3t-oCznxwHaNe?w=188&h=342&c=8&rs=1&qlt=90&o=6&dpr=1.3&pid=3.1&rm=2" 
+            alt="Cryptocurrency market ranking list"
+            class="rounded-xl shadow-lg border border-gray-200 max-h-96 w-auto object-contain"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW SECTION: Begin your crypto journey today - Blue Black Gradient -->
+    <div class="blue-black-gradient rounded-3xl p-10 md:p-14 mb-12 text-center shadow-xl">
+      <div class="max-w-2xl mx-auto">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-full mb-6 backdrop-blur-sm">
+          <span class="text-3xl">🚀</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-3">
+          Begin your crypto journey today
+        </h2>
+        <p class="text-blue-200 text-lg mb-8">
+          Open an account in minutes
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <button class="bg-white hover:bg-gray-100 text-blue-900 px-8 py-3 rounded-full font-semibold transition shadow-lg">
+            Get Started →
+          </button>
+          <button class="border border-white/30 hover:border-white/50 hover:bg-white/10 text-white px-8 py-3 rounded-full font-medium transition">
+            Learn More
+          </button>
+        </div>
+        <p class="text-blue-300/70 text-xs mt-6">
+          No credit card required • Cancel anytime
+        </p>
+      </div>
+    </div>
+       
+    <section class="space-y-8">
+
+      <!-- Realtime Prices -->
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">📈 Realtime prices</h2>
+          <div class="flex items-center gap-3">
+            <span class="text-xs text-gray-400">Refreshes every 30s</span>
+            <button id="refreshAllBtn" class="text-blue-600 text-sm hover:bg-blue-50 px-3 py-1 rounded-full transition refresh-btn">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4" id="realtimePrices">
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <p class="text-gray-500 text-sm">Tether <span class="text-xs text-gray-400">USDT</span></p>
+            <h3 id="usdt-price" class="text-lg font-bold">$0.00</h3>
+            <p id="usdt-change" class="text-sm">Loading...</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <p class="text-gray-500 text-sm">BNB <span class="text-xs text-gray-400">BNB</span></p>
+            <h3 id="bnb-price" class="text-lg font-bold">$0.00</h3>
+            <p id="bnb-change" class="text-sm">Loading...</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <p class="text-gray-500 text-sm">XRP <span class="text-xs text-gray-400">XRP</span></p>
+            <h3 id="xrp-price" class="text-lg font-bold">$0.00</h3>
+            <p id="xrp-change" class="text-sm">Loading...</p>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <p class="text-gray-500 text-sm">USDC <span class="text-xs text-gray-400">USDC</span></p>
+            <h3 id="usdc-price" class="text-lg font-bold">$0.00</h3>
+            <p id="usdc-change" class="text-sm">Loading...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Portfolio Value -->
+      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl shadow-sm border border-blue-100">
+        <p class="text-gray-600 text-sm">💰 Portfolio value (example)</p>
+        <h2 id="portfolio-value" class="text-3xl font-bold text-gray-900">$0.00</h2>
+        <p id="portfolio-change" class="text-sm mt-1">Based on selected assets</p>
+      </div>
+
+      <!-- Latest Prices with Market Stats -->
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <h3 class="text-lg font-bold mb-4">📊 Latest prices & market data</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 pb-4 border-b border-gray-100">
+          <div>
+            <p class="text-xs text-gray-400">Assets tracked</p>
+            <p id="assets-count" class="font-bold text-lg">--</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400">Markets</p>
+            <p id="markets-count" class="font-bold text-lg">--</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400">BTC dominance</p>
+            <p id="btc-dominance" class="font-bold text-lg">--%</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400">USD per BTC</p>
+            <p id="btc-usd" class="font-bold text-lg">$--</p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="bg-gray-50 p-4 rounded-xl">
+            <p class="text-gray-600 text-sm">Bitcoin</p>
+            <h4 id="btc-price" class="font-bold text-xl">$--</h4>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-xl">
+            <p class="text-gray-600 text-sm">Ethereum</p>
+            <h4 id="eth-price" class="font-bold text-xl">$--</h4>
+          </div>
+          <div class="bg-gray-50 p-4 rounded-xl">
+            <p class="text-gray-600 text-sm">Litecoin</p>
+            <h4 id="ltc-price" class="font-bold text-xl">$--</h4>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leading Assets -->
+      <div>
+        <h3 class="text-lg font-bold mb-3">🌟 Leading assets</h3>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center border p-4 rounded-xl">
+            <span>Bitcoin <span class="text-gray-400 text-sm">(BTC)</span></span>
+            <span id="btc-leading" class="font-bold">$--</span>
+          </div>
+          <div class="flex justify-between items-center border p-4 rounded-xl">
+            <span>Ethereum <span class="text-gray-400 text-sm">(ETH)</span></span>
+            <span id="eth-leading" class="font-bold">$--</span>
+          </div>
+          <div class="flex justify-between items-center border p-4 rounded-xl">
+            <span>Tether <span class="text-gray-400 text-sm">(USDT)</span></span>
+            <span id="usdt-leading" class="font-bold">$--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div>
+        <div class="flex justify-between mb-4">
+          <h3 class="text-lg font-bold">📉 Realtime market charts (7d history)</h3>
+          <span class="text-xs text-gray-400">Updates every 5m</span>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-2">
+              <p class="font-medium">Bitcoin (BTC)</p>
+              <p id="btc-chart-price" class="font-bold text-sm">$--</p>
+            </div>
+            <canvas id="btcChart" height="200"></canvas>
+          </div>
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-2">
+              <p class="font-medium">Ethereum (ETH)</p>
+              <p id="eth-chart-price" class="font-bold text-sm">$--</p>
+            </div>
+            <canvas id="ethChart" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    // COINGECKO API Integration
+    const API_BASE = 'https://api.coingecko.com/api/v3';
+    
+    let btcChart, ethChart;
+
+    // Helper: Format price
+    function formatPrice(price) {
+      if (!price && price !== 0) return '$--';
+      if (price < 0.01) return `$${price.toFixed(6)}`;
+      if (price < 1) return `$${price.toFixed(4)}`;
+      if (price < 1000) return `$${price.toFixed(2)}`;
+      return `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    // Helper: Format percentage change
+    function formatChange(change) {
+      if (!change && change !== 0) return '--%';
+      const isPositive = change >= 0;
+      const arrow = isPositive ? '▲' : '▼';
+      return `<span class="${isPositive ? 'price-up' : 'price-down'}">${arrow} ${Math.abs(change).toFixed(2)}%</span>`;
+    }
+
+    // Fetch simple prices for multiple coins
+    async function fetchSimplePrices() {
+      try {
+        const ids = ['bitcoin', 'ethereum', 'litecoin', 'tether', 'binancecoin', 'ripple', 'usd-coin'];
+        const response = await fetch(`${API_BASE}/simple/price?ids=${ids.join(',')}&vs_currencies=usd&include_24hr_change=true&include_market_cap=true`);
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error fetching prices:', error);
+        return null;
+      }
+    }
+
+    // Fetch market data (global stats + top coins)
+    async function fetchMarketData() {
+      try {
+        const response = await fetch(`${API_BASE}/global`);
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error fetching market data:', error);
+        return null;
+      }
+    }
+
+    // Fetch chart data for a coin
+    async function fetchChartData(coinId, days = 7) {
+      try {
+        const response = await fetch(`${API_BASE}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`);
+        const data = await response.json();
+        return data.prices.map(p => ({ date: new Date(p[0]), price: p[1] }));
+      } catch (error) {
+        console.error(`Error fetching ${coinId} chart:`, error);
+        return null;
+      }
+    }
+
+    // Update all UI elements
+    async function updateAllData() {
+      try {
+        const [prices, marketData, btcChartData, ethChartData] = await Promise.all([
+          fetchSimplePrices(),
+          fetchMarketData(),
+          fetchChartData('bitcoin', 7),
+          fetchChartData('ethereum', 7)
+        ]);
+
+        // Update simple prices
+        if (prices) {
+          // Bitcoin
+          const btc = prices.bitcoin;
+          if (btc) {
+            document.getElementById('btc-price').innerHTML = formatPrice(btc.usd);
+            document.getElementById('btc-leading').innerHTML = formatPrice(btc.usd);
+            document.getElementById('btc-usd').innerHTML = formatPrice(btc.usd);
+            document.getElementById('btc-chart-price').innerHTML = formatPrice(btc.usd);
+          }
+          
+          // Ethereum
+          const eth = prices.ethereum;
+          if (eth) {
+            document.getElementById('eth-price').innerHTML = formatPrice(eth.usd);
+            document.getElementById('eth-leading').innerHTML = formatPrice(eth.usd);
+            document.getElementById('eth-chart-price').innerHTML = formatPrice(eth.usd);
+          }
+          
+          // Litecoin
+          const ltc = prices.litecoin;
+          if (ltc) document.getElementById('ltc-price').innerHTML = formatPrice(ltc.usd);
+          
+          // Tether
+          const usdt = prices.tether;
+          if (usdt) {
+            document.getElementById('usdt-price').innerHTML = formatPrice(usdt.usd);
+            document.getElementById('usdt-leading').innerHTML = formatPrice(usdt.usd);
+            if (usdt.usd_24h_change !== undefined) {
+              document.getElementById('usdt-change').innerHTML = formatChange(usdt.usd_24h_change);
+            }
+          }
+          
+          // BNB
+          const bnb = prices.binancecoin;
+          if (bnb) {
+            document.getElementById('bnb-price').innerHTML = formatPrice(bnb.usd);
+            if (bnb.usd_24h_change !== undefined) {
+              document.getElementById('bnb-change').innerHTML = formatChange(bnb.usd_24h_change);
+            }
+          }
+          
+          // XRP
+          const xrp = prices.ripple;
+          if (xrp) {
+            document.getElementById('xrp-price').innerHTML = formatPrice(xrp.usd);
+            if (xrp.usd_24h_change !== undefined) {
+              document.getElementById('xrp-change').innerHTML = formatChange(xrp.usd_24h_change);
+            }
+          }
+          
+          // USDC
+          const usdc = prices['usd-coin'];
+          if (usdc) {
+            document.getElementById('usdc-price').innerHTML = formatPrice(usdc.usd);
+            if (usdc.usd_24h_change !== undefined) {
+              document.getElementById('usdc-change').innerHTML = formatChange(usdc.usd_24h_change);
+            }
+          }
+          
+          // Portfolio value (example calculation)
+          const portfolioValue = (btc?.usd || 0) * 0.5 + (eth?.usd || 0) * 2;
+          document.getElementById('portfolio-value').innerHTML = formatPrice(portfolioValue);
+          const btcChange = btc?.usd_24h_change || 0;
+          document.getElementById('portfolio-change').innerHTML = `24h change: ${formatChange(btcChange)}`;
+        }
+
+        // Update global market stats
+        if (marketData?.data) {
+          const global = marketData.data;
+          document.getElementById('assets-count').innerHTML = global.active_cryptocurrencies?.toLocaleString() || '--';
+          document.getElementById('markets-count').innerHTML = global.markets?.toLocaleString() || '--';
+          if (global.market_cap_percentage?.btc) {
+            document.getElementById('btc-dominance').innerHTML = `${global.market_cap_percentage.btc.toFixed(2)}%`;
+          }
+        }
+
+        // Update charts
+        if (btcChartData && btcChartData.length > 0 && btcChart) {
+          const btcPrices = btcChartData.map(d => d.price);
+          const btcLabels = btcChartData.map(d => d.date.toLocaleDateString());
+          btcChart.data.datasets[0].data = btcPrices;
+          btcChart.data.labels = btcLabels;
+          btcChart.update();
+        }
+        
+        if (ethChartData && ethChartData.length > 0 && ethChart) {
+          const ethPrices = ethChartData.map(d => d.price);
+          const ethLabels = ethChartData.map(d => d.date.toLocaleDateString());
+          ethChart.data.datasets[0].data = ethPrices;
+          ethChart.data.labels = ethLabels;
+          ethChart.update();
+        }
+
+      } catch (error) {
+        console.error('Error updating data:', error);
+      }
+    }
+
+    // Initialize charts
+    function initCharts() {
+      const btcCtx = document.getElementById('btcChart')?.getContext('2d');
+      const ethCtx = document.getElementById('ethChart')?.getContext('2d');
+      
+      if (btcCtx) {
+        btcChart = new Chart(btcCtx, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'Bitcoin Price (USD)',
+              data: [],
+              borderColor: '#f7931a',
+              backgroundColor: 'rgba(247, 147, 26, 0.1)',
+              tension: 0.4,
+              fill: true,
+              pointRadius: 0,
+              pointHoverRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { 
+              legend: { position: 'top' },
+              tooltip: { callbacks: { label: (ctx) => `$${ctx.raw.toLocaleString()}` } }
+            }
+          }
+        });
+      }
+      
+      if (ethCtx) {
+        ethChart = new Chart(ethCtx, {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'Ethereum Price (USD)',
+              data: [],
+              borderColor: '#627eea',
+              backgroundColor: 'rgba(98, 126, 234, 0.1)',
+              tension: 0.4,
+              fill: true,
+              pointRadius: 0,
+              pointHoverRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { 
+              legend: { position: 'top' },
+              tooltip: { callbacks: { label: (ctx) => `$${ctx.raw.toLocaleString()}` } }
+            }
+          }
+        });
+      }
+    }
+
+    // Auto-refresh every 30 seconds
+    let autoRefreshInterval;
+    
+    function startAutoRefresh() {
+      if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+      autoRefreshInterval = setInterval(() => {
+        updateAllData();
+      }, 30000);
+    }
+
+    // Initialize everything
+    document.addEventListener('DOMContentLoaded', async () => {
+      initCharts();
+      await updateAllData();
+      startAutoRefresh();
+      
+      // Manual refresh button
+      const refreshBtn = document.getElementById('refreshAllBtn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', async () => {
+          refreshBtn.textContent = '⟳ Refreshing...';
+          await updateAllData();
+          setTimeout(() => {
+            refreshBtn.textContent = '🔄 Refresh';
+          }, 1000);
+        });
+      }
+    });
+  </script>
+
+  <!-- Powerful Tools Section -->
+<div class="bg-gradient-to-br from-gray-50 to-white border border-gray-100 rounded-2xl p-6 md:p-8 mb-12">
+  <div class="flex flex-col md:flex-row items-center gap-8">
+    <!-- Image on the LEFT -->
+    <div class="md:w-2/5">
+      <img 
+        src="https://images.weserv.nl/?url=theforexgeek.com/wp-content/uploads/2021/07/Exclusive-Markets-MT4-Trading-Platforms.jpg&w=1600&output=webp&q=100" 
+        alt="Advanced trading platform interface showing charts and market data"
+        class="rounded-xl shadow-lg border border-gray-200 w-full object-cover"
+        onerror="this.src='https://placehold.co/600x400/1e293b/ffffff?text=Trading+Platform'"
+      />
+    </div>
+    
+    <!-- Text content on the RIGHT -->
+    <div class="md:w-3/5 text-left">
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+        Powerful tools, built for advanced traders.
+      </h2>
+      <p class="text-gray-600 text-base md:text-lg mb-6 leading-relaxed">
+        Powerful analytics with Coinbase safety and security deliver a premium trading experience. Tap into advanced charting capabilities, realtime order books, and deep liquidity across hundreds of markets.
+      </p>
+      <button class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full font-semibold transition shadow-md flex items-center gap-2">
+        Begin trading <span>→</span>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- COINBASE ONE Section -->
+<div class="bg-white border border-gray-100 rounded-2xl p-6 md:p-8 mb-12 shadow-sm">
+  <div class="flex flex-col md:flex-row items-center gap-8">
+    <!-- Text content on the LEFT -->
+    <div class="md:w-1/2 text-left">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-3xl">💎</span>
+        <h2 class="text-2xl md:text-3xl font-bold text-gray-900">
+          COINBASE ONE
+        </h2>
+      </div>
+      <p class="text-gray-800 font-semibold text-lg mb-2">
+        No trading fees, extra rewards.
+      </p>
+      <p class="text-gray-600 mb-6 leading-relaxed">
+        Get more from crypto with one membership: no trading fees, enhanced rewards, priority support, and more.
+      </p>
+      <button class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-6 py-2.5 rounded-full font-medium transition flex items-center gap-2">
+        Start free trial <span>→</span>
+      </button>
+    </div>
+    
+    <!-- Image on the RIGHT -->
+    <div class="md:w-1/2 flex justify-end">
+      <img 
+        src="https://s3.envato.com/files/498768772/screenshot/10-created.png" 
+        alt="Coinbase One account creation confirmation screen showing 'Your account has been created' message"
+        class="rounded-xl shadow-md border border-gray-200 w-full max-w-sm object-contain"
+        onerror="this.src='https://placehold.co/400x300/0052ff/ffffff?text=Coinbase+One'"
+      />
+    </div>
+  </div>
+</div>
+<!-- BASE APP Section (Styled like COINBASE ONE) -->
+<div class="bg-white border border-gray-100 rounded-2xl p-6 md:p-8 mb-12 shadow-sm">
+  <div class="flex flex-col md:flex-row items-center gap-8">
+    <!-- Image on the LEFT -->
+    <div class="md:w-1/2 flex justify-start">
+      <img 
+        src="https://images.pexels.com/photos/6801874/pexels-photo-6801874.jpeg?auto=compress&cs=tinysrgb&w=600" 
+        alt="Base App interface showing mobile crypto trading features"
+        class="rounded-xl shadow-md border border-gray-200 w-full max-w-sm object-contain"
+        onerror="this.src='https://placehold.co/400x300/8b5cf6/ffffff?text=Base+App'"
+      />
+    </div>
+    
+    <!-- Text content on the RIGHT -->
+    <div class="md:w-1/2 text-left">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-3xl">📱</span>
+        <h2 class="text-2xl md:text-3xl font-bold text-gray-900">
+          BASE APP
+        </h2>
+      </div>
+      <p class="text-gray-800 font-semibold text-lg mb-2">
+        Many ways to earn crypto with the Base App.
+      </p>
+      <p class="text-gray-600 mb-6 leading-relaxed">
+        An all-in-one app to trade, create, explore, and chat in one place.
+      </p>
+      <button class="border border-purple-600 text-purple-600 hover:bg-purple-50 px-6 py-2.5 rounded-full font-medium transition flex items-center gap-2">
+        Discover more <span>→</span>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- New to Crypto? Learn the Essentials Section -->
+<div class="mb-16">
+  <!-- Section Header -->
+  <div class="text-left mb-8">
+    <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+      New to crypto? Learn the essentials
+    </h2>
+    <p class="text-gray-600 text-lg">
+      Beginner guides, useful tips, and market updates for newcomers, seasoned investors, and everyone in between.
+    </p>
+  </div>
+
+  <!-- Three Cards Grid -->
+  <div class="grid md:grid-cols-3 gap-6">
+    
+    <!-- Card 1: USDC Rewards -->
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+      <img 
+        src="https://images.pexels.com/photos/730547/pexels-photo-730547.jpeg?auto=compress&cs=tinysrgb&w=900" 
+        alt="Person holding US dollar bills representing USDC stablecoin value"
+        class="w-full h-48 object-cover"
+        onerror="this.src='https://placehold.co/900x600/0052ff/ffffff?text=USDC'"
+      />
+      <div class="p-5">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Stablecoins</span>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">Earn rewards with USDC</h3>
+        <p class="text-gray-500 text-sm mb-4">Learn how you can earn up to 3.35% rewards by simply holding USDC on Coinbase.</p>
+        <a 
+          href="https://www.coinbase.com/usdc" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-blue-600 font-medium hover:text-blue-700 transition"
+        >
+          Learn about USDC <span>→</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Card 2: Crypto Basics Guide -->
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+      <img 
+        src="https://images.pexels.com/photos/6770610/pexels-photo-6770610.jpeg?auto=compress&cs=tinysrgb&w=900" 
+        alt="Person using laptop with cryptocurrency charts and graphs"
+        class="w-full h-48 object-cover"
+        onerror="this.src='https://placehold.co/900x600/8b5cf6/ffffff?text=Crypto+Basics'"
+      />
+      <div class="p-5">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-1 rounded-full">Beginner Guide</span>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">Can crypto really replace your bank?</h3>
+        <p class="text-gray-500 text-sm mb-4">Explore the fundamentals of cryptocurrency and how it's changing the future of finance.</p>
+        <a 
+          href="https://www.coinbase.com/learn/crypto-basics/can-crypto-really-replace-your-bank" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-purple-600 font-medium hover:text-purple-700 transition"
+        >
+          Read Crypto Basics <span>→</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Card 3: Dollar-Cost Averaging Guide -->
+    <div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+      <img 
+        src="https://images.pexels.com/photos/164527/pexels-photo-164527.jpeg?auto=compress&cs=tinysrgb&w=900" 
+        alt="Bitcoin coins stacked representing investment strategy"
+        class="w-full h-48 object-cover"
+        onerror="this.src='https://placehold.co/900x600/10b981/ffffff?text=DCA+Guide'"
+      />
+      <div class="p-5">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded-full">Investment Strategy</span>
+        </div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">Dollar-cost averaging guide</h3>
+        <p class="text-gray-500 text-sm mb-4">Learn when is the best time to invest in crypto using the DCA strategy for long-term success.</p>
+        <a 
+          href="https://www.coinbase.com/learn/tips-and-tutorials/dollar-cost-averaging" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-green-600 font-medium hover:text-green-700 transition"
+        >
+          Explore DCA Guide <span>→</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Explore Button -->
+  <div class="text-center mt-8">
+    <button class="border border-gray-300 hover:border-blue-400 hover:bg-blue-50 px-8 py-3 rounded-full font-medium transition">
+      Explore all guides →
+    </button>
+  </div>
+</div>
+<!-- Take Charge of Your Money Section -->
+<div class="relative rounded-3xl overflow-hidden mb-16">
+  <!-- Background Image -->
+  <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" 
+       style="background-image: url('https://www.bing.com/th/id/OIP.JMqJBvQglbMnaB6iLLDBfwHaDt?w=193&h=135&c=8&rs=1&qlt=70&pcl=292827&o=6&pid=3.1&rm=2');">
+  </div>
+  
+  <!-- Dark Overlay for text readability -->
+  <div class="absolute inset-0 bg-black/60"></div>
+  
+  <!-- Content -->
+  <div class="relative z-10 text-center py-16 md:py-20 px-6">
+    <h2 class="text-3xl md:text-4xl font-bold text-white mb-3">
+      Take charge of your money
+    </h2>
+    <p class="text-gray-200 text-lg mb-8">
+      Build your portfolio today and explore crypto
+    </p>
+    <button class="bg-white hover:bg-gray-100 text-gray-900 px-8 py-3 rounded-full font-semibold transition shadow-lg">
+      Sign up →
+    </button>
+  </div>
+</div>
+
+</footer>
+<!-- Footer / Legal Disclaimer Section -->
+<footer class="border-t border-gray-100 pt-8 pb-12 mt-8">
+  <div class="text-center space-y-4">
+    <!-- New H5 Message -->
+    <h5 class="text-sm md:text-base font-semibold text-gray-700">
+      🔒 Your investments are safest with us.
+    </h5>
+    
+    <!-- Legal Disclaimers in H6 -->
+    <div class="space-y-2">
+      <h6 class="text-xs text-gray-500 font-normal leading-relaxed">
+        DEX trading services are provided by Coinbase Bermuda Technologies Ltd.
+      </h6>
+      <h6 class="text-xs text-gray-500 font-normal leading-relaxed">
+        Products and features may not be available in all regions. Information is for informational purposes only, and is not
+        (i) an offer, or solicitation of an offer, to invest in, or to buy or sell, any interests or shares, or to participate in any investment or trading strategy or
+        (ii) intended to provide accounting, legal, or tax advice, or investment recommendations. Trading cryptocurrency comes with risk.
+      </h6>
+    </div>
+  </div>
+</footer>
+</body>
 </html>

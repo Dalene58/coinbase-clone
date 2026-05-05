@@ -1,11 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-	getCoinMarketChart,
-	getGlobalData,
-	getLivePrices,
-	getMarkets,
-} from "../data/coingecko";
+import { getCryptoAll } from "../data/cryptoApi";
 
 const FALLBACK_LIVE_ASSETS = [
 	{ label: "Tether", symbol: "USDT", apiId: "tether" },
@@ -52,7 +47,6 @@ function buildSparklinePath(values, width = 240, height = 72) {
 
 	return values
 		.map((value, index) => {
-			// Normalize values into the SVG viewport so each coin can reuse the same chart size.
 			const x = (index / (values.length - 1)) * width;
 			const y = height - ((value - min) / range) * height;
 			return `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`;
@@ -88,122 +82,76 @@ export default function Home() {
 	const usdPerBtc = typeof quickPrices?.bitcoin?.usd === "number" ? quickPrices.bitcoin.usd : null;
 	const hasChartData = LIVE_CHART_COINS.some((coin) => (liveCharts[coin.id] || []).length > 1);
 
-	useEffect(() => {
-		const fetchMarketStats = async () => {
-			try {
-				const trackedIds = [
-					"bitcoin",
-					"ethereum",
-					"litecoin",
-					...FALLBACK_LIVE_ASSETS.map((asset) => asset.apiId),
-				];
-				const [globalResponse, pricesResponse] = await Promise.all([
-					getGlobalData(),
-					getLivePrices(trackedIds),
-				]);
+useEffect(() => {
+	let intervalId;
+	let chartIntervalId;
+	let isMounted = true;
 
-				setGlobalSnapshot(globalResponse?.data || null);
-				const nextLivePrices = FALLBACK_LIVE_ASSETS.reduce((accumulator, asset) => {
-					accumulator[asset.apiId] = pricesResponse?.[asset.apiId] || {};
-					return accumulator;
-				}, {});
-				const nextQuickPrices = {
-					bitcoin: pricesResponse?.bitcoin || null,
-					ethereum: pricesResponse?.ethereum || null,
-					litecoin: pricesResponse?.litecoin || null,
-				};
+	const fetchAllData = async () => {
+		try {
+			const response = await getCryptoAll();
+			const { global, prices, markets } = response.data;
 
-				setLivePrices(nextLivePrices);
-				setQuickPrices(nextQuickPrices);
-				setStatsError("");
-				setLiveError("");
-			} catch (error) {
-				setGlobalSnapshot(FALLBACK_GLOBAL_SNAPSHOT);
-				setQuickPrices(FALLBACK_QUICK_PRICES);
-				setLivePrices(FALLBACK_LIVE_PRICES);
-				setStatsError("Using fallback market data while live data is temporarily unavailable.");
-				setLiveError(resolveErrorMessage(error, "Realtime prices are temporarily unavailable."));
-			}
-			setIsLoadingLive(false);
-		};
+			if (!isMounted) return;
 
-		const fetchTopAssets = async () => {
-			try {
-				const marketData = await getMarkets("usd");
-				if (Array.isArray(marketData) && marketData.length > 0) {
-					setTopAssets(
-						marketData.slice(0, 3).map((asset) => ({
-							name: asset.name,
-							symbol: String(asset.symbol || "").toUpperCase(),
-							price:
-								typeof asset.current_price === "number"
-									? `$${asset.current_price.toLocaleString(undefined, {
-										maximumFractionDigits: asset.current_price > 1 ? 2 : 4,
-									})}`
-									: "N/A",
-						}))
-					);
-					setMarketsError("");
-				}
-			} catch (error) {
-				setMarketsError(resolveErrorMessage(error, "Showing fallback top assets while live data is unavailable."));
-			}
-		};
+			setGlobalSnapshot(global || null);
 
-		const fetchLiveCharts = async () => {
-			try {
-				const chartResults = await Promise.allSettled(
-					LIVE_CHART_COINS.map(async (coin) => {
-						const chartData = await getCoinMarketChart(coin.id, "usd", 1);
-						const points = Array.isArray(chartData?.prices) ? chartData.prices.slice(-40) : [];
-						return { id: coin.id, points };
-					})
+			const nextLivePrices = FALLBACK_LIVE_ASSETS.reduce((acc, asset) => {
+				acc[asset.apiId] = prices?.[asset.apiId] || {};
+				return acc;
+			}, {});
+
+			setLivePrices(nextLivePrices);
+
+			setQuickPrices({
+				bitcoin: prices?.bitcoin || null,
+				ethereum: prices?.ethereum || null,
+				litecoin: prices?.litecoin || null,
+			});
+
+			if (Array.isArray(markets)) {
+				setTopAssets(
+					markets.slice(0, 3).map((asset) => ({
+						name: asset.name,
+						symbol: String(asset.symbol || "").toUpperCase(),
+						price:
+							typeof asset.current_price === "number"
+								? `$${asset.current_price.toLocaleString()}`
+								: "N/A",
+					}))
 				);
-
-				const successfulCharts = chartResults
-					.filter((result) => result.status === "fulfilled")
-					.map((result) => [result.value.id, result.value.points]);
-
-				setLiveCharts(Object.fromEntries(successfulCharts));
-
-				if (successfulCharts.length === 0) {
-					throw new Error("Live market charts are temporarily unavailable.");
-				}
-
-				setChartsError(
-					successfulCharts.length < LIVE_CHART_COINS.length
-						? "Some chart data is temporarily unavailable."
-						: ""
-				);
-			} catch (error) {
-				setLiveCharts(FALLBACK_CHARTS);
-				setChartsError(resolveErrorMessage(error, "Using fallback chart data while live data is unavailable."));
-			} finally {
-				setIsLoadingCharts(false);
 			}
-		};
 
-		let intervalId;
-		let chartIntervalId;
+			setStatsError("");
+			setLiveError("");
+			setMarketsError("");
+		} catch (error) {
+			setGlobalSnapshot(FALLBACK_GLOBAL_SNAPSHOT);
+			setQuickPrices(FALLBACK_QUICK_PRICES);
+			setLivePrices(FALLBACK_LIVE_PRICES);
+		}
 
-		const startLiveFeed = async () => {
-			const selectedAssets = FALLBACK_LIVE_ASSETS;
-			setLiveAssets(selectedAssets);
-			// Fetch once on mount, then keep prices/charts fresh with a shared 5 minute cadence.
-			await fetchMarketStats();
-			await fetchTopAssets();
-			await fetchLiveCharts();
-			intervalId = setInterval(fetchMarketStats, 300000);
-			chartIntervalId = setInterval(fetchLiveCharts, 300000);
-		};
+		setIsLoadingLive(false);
+	};
 
-		startLiveFeed();
+	const start = async () => {
+		setLiveAssets(FALLBACK_LIVE_ASSETS);
 
-		return () => {
-			if (intervalId) clearInterval(intervalId);
-			if (chartIntervalId) clearInterval(chartIntervalId);
-		};
-	}, []);
+		await fetchAllData();
+		await fetchLiveCharts();
+
+		intervalId = setInterval(fetchAllData, 300000);
+		chartIntervalId = setInterval(fetchLiveCharts, 300000);
+	};
+
+	start();
+
+	return () => {
+		isMounted = false;
+		if (intervalId) clearInterval(intervalId);
+		if (chartIntervalId) clearInterval(chartIntervalId);
+	};
+}, []);
 
 	return (
 		<main className="px-4 py-10 md:px-8 lg:px-12">
@@ -220,10 +168,10 @@ export default function Home() {
 							<div className="mt-6 flex w-full flex-col gap-3 sm:flex-row sm:items-center">
 								<input
 									type="text"
-										placeholder="satoshi@nakamoto.com"
-										readOnly
-										aria-label="Sign up input"
-										className="block h-14 w-full rounded-xl border border-slate-300 bg-white px-5 text-slate-900 placeholder:text-slate-500"
+									placeholder="satoshi@nakamoto.com"
+									readOnly
+									aria-label="Sign up input"
+									className="block h-14 w-full rounded-xl border border-slate-300 bg-white px-5 text-slate-900 placeholder:text-slate-500"
 								/>
 								<Link
 									to="/signup"
@@ -655,13 +603,14 @@ export default function Home() {
 			</section>
 
 			<section className="mt-10 space-y-3 border-t border-slate-200 pt-6 text-xs text-slate-500">
-				<p align="center" font size="xs">DEX trading services are provided by Coinbase Bermuda Technologies Ltd.</p>
-				<p align="center" font size="xs">
-					Products and features may not be available in all regions. Information is for or informational purposes only, and is not 
-					<p align="center" font size="xs">(i) an offer, or solicitation of an offer, to invest in, or to buy or sell, any interests or shares, or to participate in any investment or trading strategy or</p> 
-					<p align="center" font size="xs">(ii) intended to provide accounting, legal, or tax advice, or investment recommendations. Trading cryptocurrency comes with risk.</p>
+				<p align="center">DEX trading services are provided by Coinbase Bermuda Technologies Ltd.</p>
+				<p align="center">
+					Products and features may not be available in all regions. Information is for informational purposes only, and is not 
+					<p align="center">(i) an offer, or solicitation of an offer, to invest in, or to buy or sell, any interests or shares, or to participate in any investment or trading strategy or</p> 
+					<p align="center">(ii) intended to provide accounting, legal, or tax advice, or investment recommendations. Trading cryptocurrency comes with risk.</p>
 				</p>
 			</section>
 		</main>
 	);
 }
+

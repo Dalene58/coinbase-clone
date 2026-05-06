@@ -1,23 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getActiveUser } from '../api/auth';
+import { useAuth } from '../context/AuthContext';
 
 export default function Profile() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const activeUser = getActiveUser();
-
-    if (!activeUser) {
+    if (!loading && !user) {
       navigate('/signin');
       return;
     }
-
-    setUser(activeUser);
-    setLoading(false);
-  }, [navigate]);
+  }, [user, loading, navigate]);
 
   if (loading) {
     return (

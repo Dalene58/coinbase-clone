@@ -54,7 +54,12 @@ export default function SignUp() {
 
   const handleCreateAccount = async () => {
     if (!password.trim()) {
-      setStatusMessage('Please create a password with at least 8 characters.')
+      setStatusMessage('Please create a password.')
+      return
+    }
+    
+    if (password.length < 4) {
+      setStatusMessage('Password must be at least 4 characters long.')
       return
     }
 
@@ -71,18 +76,10 @@ export default function SignUp() {
           : name.trim(),
       })
 
-      // ✅ CREATE USER OBJECT
-      const userData = {
-        name: requiresOrganization
-          ? requiresOrganizationRole
-            ? `${organization.trim()} - ${organizationRole.trim()}`
-            : organization.trim()
-          : name.trim(),
-        email,
+      // ✅ SAVE USER DATA FROM BACKEND RESPONSE
+      if (response.user) {
+        login(response.user)
       }
-
-      // ✅ SAVE GLOBAL STATE
-      login(userData)
 
       // ✅ REDIRECT HOME
       navigate('/')
@@ -234,8 +231,8 @@ export default function SignUp() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="mt-1 block w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="Min. 8 characters"
-                minLength={8}
+                placeholder="Min. 4 characters"
+                minLength={4}
                 required
               />
             </div>

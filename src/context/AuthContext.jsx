@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = (userData) => {
+    console.log('Setting user data in AuthContext:', userData);
     setUser(userData);
   };
 

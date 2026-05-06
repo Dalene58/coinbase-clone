@@ -1,4 +1,4 @@
-const API_BASE = 'https://interim-assesment-dalene58.onrender.com/api';
+const API_BASE = 'https://interim-assesment-dalene58-2.onrender.com/api';
 
 const apiCall = async (endpoint, options = {}) => {
   try {

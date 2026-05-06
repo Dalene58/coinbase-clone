@@ -26,9 +26,6 @@ export default function SignIn() {
         setStep('password')
       } else {
         const result = await signInWithEmail({ email, password })
-        if (result.user) {
-          login(result.user)
-        }
         setStatusMessage(result?.message || 'Signed in successfully.')
         navigate('/')
       }
